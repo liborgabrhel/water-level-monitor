@@ -13,7 +13,7 @@ from pyhap.const import CATEGORY_SENSOR
 
 # Konfigurace
 FLOAT_SWITCH_PIN = 17  # GPIO pin pro plovákový spínač (změň podle tvého zapojení)
-CHECK_INTERVAL = 1  # Interval kontroly v sekundách
+CHECK_INTERVAL = 3600  # Interval kontroly - 1 hodina (3600 sekund)
 
 # Nastavení logování
 logging.basicConfig(
