@@ -66,6 +66,7 @@ class WaterLevelSensor(Accessory):
         """
         Pravidelně kontroluje hladinu vody a aktualizuje HomeKit
         """
+        logger.info("🔄 Kontroluji hladinu vody...")
         current_state = self.check_water_level()
         
         # Pokud se stav změnil
