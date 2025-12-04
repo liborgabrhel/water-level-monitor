@@ -38,7 +38,7 @@ class WaterLevelSensor(Accessory):
         
         # Nastavení GPIO
         GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        GPIO.setup(self.pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         
         # Přidání LeakSensor service pro Apple Home
         leak_service = self.add_preload_service('LeakSensor')
@@ -59,7 +59,7 @@ class WaterLevelSensor(Accessory):
         """
         logger.info("🔎 Čtu GPIO pin...")
         # GPIO.HIGH znamená že plovák je nahoře (voda je vysoká)
-        water_high = GPIO.input(self.pin) == GPIO.HIGH
+        water_high = GPIO.input(self.pin) == GPIO.LOW
         logger.info(f"📊 GPIO hodnota: {GPIO.input(self.pin)}, water_high: {water_high}")
         return water_high
     
