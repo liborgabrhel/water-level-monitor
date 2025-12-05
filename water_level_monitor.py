@@ -57,10 +57,10 @@ class WaterLevelSensor(Accessory):
         Kontroluje stav plovákového spínače
         Returns: True pokud je detekována vysoká hladina vody
         """
-        logger.info("🔎 Čtu GPIO pin...")
-        # GPIO.HIGH znamená že plovák je nahoře (voda je vysoká)
+        
+        # GPIO.LOW znamená že plovák je nahoře (voda je vysoká)
         water_high = GPIO.input(self.pin) == GPIO.LOW
-        logger.info(f"📊 GPIO hodnota: {GPIO.input(self.pin)}, water_high: {water_high}")
+        
         return water_high
     
     @Accessory.run_at_interval(CHECK_INTERVAL)
@@ -68,7 +68,7 @@ class WaterLevelSensor(Accessory):
         """
         Pravidelně kontroluje hladinu vody a aktualizuje HomeKit
         """
-        logger.info("🔄 Kontroluji hladinu vody...")
+        
         current_state = self.check_water_level()
         
         # Pokud se stav změnil
