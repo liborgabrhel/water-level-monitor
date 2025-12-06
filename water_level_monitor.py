@@ -34,7 +34,7 @@ class WaterLevelSensor(Accessory):
     def __init__(self, *args, pin=FLOAT_SWITCH_PIN, **kwargs):
         super().__init__(*args, **kwargs)
         self.pin = pin
-        self.last_state = False
+        self.was_water_level_high = False
         
         # Nastavení GPIO
         GPIO.setmode(GPIO.BCM)
@@ -69,13 +69,13 @@ class WaterLevelSensor(Accessory):
         Pravidelně kontroluje hladinu vody a aktualizuje HomeKit
         """
         
-        current_state = self.check_water_level()
-        
+        is_water_level_high = self.check_water_level()
+
         # Pokud se stav změnil
-        if current_state != self.last_state:
-            self.last_state = current_state
-            
-            if current_state:
+        if is_water_level_high != self.was_water_level_high:
+            self.was_water_level_high = is_water_level_high
+
+            if is_water_level_high:
                 logger.warning("⚠️ VAROVÁNÍ: Vysoká hladina vody detekována! Vyprázdni barel!")
                 self.leak_detected.set_value(1)  # Leak detected
             else:
