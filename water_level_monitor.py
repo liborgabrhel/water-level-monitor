@@ -7,6 +7,7 @@ Monitors water level using a float switch and integrates with Apple HomeKit
 import RPi.GPIO as GPIO
 import time
 import logging
+from datetime import datetime
 from pyhap.accessory import Accessory
 from pyhap.accessory_driver import AccessoryDriver
 from pyhap.const import CATEGORY_SENSOR
@@ -14,6 +15,8 @@ from pyhap.const import CATEGORY_SENSOR
 # Konfigurace
 FLOAT_SWITCH_PIN = 17  # GPIO pin pro plovákový spínač (změň podle tvého zapojení)
 CHECK_INTERVAL = 3600  # Interval kontroly - 1 hodina (3600 sekund)
+NOTIFICATION_START_HOUR = 9   # Oznámení se posílají od 9:00
+NOTIFICATION_END_HOUR = 21    # Oznámení se posílají do 21:00
 
 # Nastavení logování
 logging.basicConfig(
@@ -63,13 +66,23 @@ class WaterLevelSensor(Accessory):
         
         return water_high
     
+    def is_notification_time(self):
+        """
+        Kontroluje zda je aktuální čas v povoleném rozmezí pro oznámení
+        Returns: True pokud je čas mezi NOTIFICATION_START_HOUR a NOTIFICATION_END_HOUR
+        """
+        current_hour = datetime.now().hour
+        return NOTIFICATION_START_HOUR <= current_hour < NOTIFICATION_END_HOUR
+
     @Accessory.run_at_interval(CHECK_INTERVAL)
     async def run(self):
         """
         Pravidelně kontroluje hladinu vody a aktualizuje HomeKit
+        Oznámení se posílají pouze v povoleném časovém rozmezí
         """
-        
+
         is_water_level_high = self.check_water_level()
+        is_allowed_time = self.is_notification_time()
 
         # Pokud se stav změnil
         if is_water_level_high != self.was_water_level_high:
@@ -77,10 +90,18 @@ class WaterLevelSensor(Accessory):
 
             if is_water_level_high:
                 logger.warning("⚠️ VAROVÁNÍ: Vysoká hladina vody detekována! Vyprázdni barel!")
-                self.leak_detected.set_value(1)  # Leak detected
+                if is_allowed_time:
+                    self.leak_detected.set_value(1)  # Leak detected
+                else:
+                    logger.info(f"Oznámení odloženo - mimo povolený čas ({NOTIFICATION_START_HOUR}:00-{NOTIFICATION_END_HOUR}:00)")
             else:
                 logger.info("✓ Hladina vody OK")
                 self.leak_detected.set_value(0)  # No leak
+
+        # Pokud je vysoká hladina a jsme v povoleném čase, pošli oznámení (i když se stav nezměnil)
+        elif is_water_level_high and is_allowed_time and self.leak_detected.get_value() == 0:
+            logger.info("Posílám odložené oznámení o vysoké hladině vody")
+            self.leak_detected.set_value(1)
         
     def stop(self):
         """Vyčištění při ukončení"""
